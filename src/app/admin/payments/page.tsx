@@ -39,35 +39,83 @@ interface PaymentWithRelations {
       title: string
       date: string
     } | null
-    profile: {
-      nickname: string | null
-    } | null
+  } | null
+  profile: {
+    nickname: string | null
   } | null
 }
 
 async function getPayments(): Promise<PaymentWithRelations[]> {
   const supabase = createAdminClient()
 
-  const { data, error } = await supabase
+  // First, fetch payments with bookings and events
+  const { data: paymentsData, error: paymentsError } = await supabase
     .from('payments')
     .select(`
-      *,
+      id,
+      booking_id,
+      stripe_payment_id,
+      amount,
+      status,
+      paid_at,
+      created_at,
       booking:bookings(
         id,
         user_id,
-        event:events(title, date),
-        profile:profiles(nickname)
+        event:events(title, date)
       )
     `)
     .order('created_at', { ascending: false })
     .limit(100)
 
-  if (error) {
-    console.error('Error fetching payments:', error)
+  if (paymentsError) {
+    console.error('Error fetching payments:', paymentsError)
     return []
   }
 
-  return (data as unknown as PaymentWithRelations[]) || []
+  if (!paymentsData || paymentsData.length === 0) {
+    return []
+  }
+
+  // Get unique user IDs from bookings
+  const userIds = [...new Set(
+    paymentsData
+      .map(p => (p.booking as unknown as { user_id: string } | null)?.user_id)
+      .filter((id): id is string => id !== undefined && id !== null)
+  )]
+
+  // Fetch profiles for these users
+  const { data: profilesData, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, nickname')
+    .in('id', userIds)
+
+  if (profilesError) {
+    console.error('Error fetching profiles:', profilesError)
+  }
+
+  // Create a map of user_id -> profile
+  const profilesMap = new Map(
+    (profilesData || []).map(p => [p.id, { nickname: p.nickname }])
+  )
+
+  // Merge payments with profiles
+  const payments: PaymentWithRelations[] = paymentsData.map(payment => {
+    const booking = payment.booking as unknown as { id: string; user_id: string; event: { title: string; date: string } | null } | null
+    return {
+      id: payment.id,
+      booking_id: payment.booking_id,
+      stripe_payment_id: payment.stripe_payment_id,
+      amount: payment.amount,
+      status: payment.status,
+      paid_at: payment.paid_at,
+      created_at: payment.created_at,
+      booking: booking,
+      profile: booking ? profilesMap.get(booking.user_id) || null : null,
+    }
+  })
+
+  return payments
 }
 
 export default async function AdminPaymentsPage() {
@@ -129,7 +177,7 @@ export default async function AdminPaymentsPage() {
                     </p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {payment.booking?.profile?.nickname || '名前未設定'}
+                    {payment.profile?.nickname || '名前未設定'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="font-bold">¥{payment.amount.toLocaleString()}</span>

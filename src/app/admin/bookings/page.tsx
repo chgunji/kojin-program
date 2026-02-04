@@ -36,28 +36,67 @@ interface BookingWithRelations {
 async function getBookings(): Promise<BookingWithRelations[]> {
   const supabase = createAdminClient()
 
-  const { data, error } = await supabase
+  // First, fetch bookings with events
+  const { data: bookingsData, error: bookingsError } = await supabase
     .from('bookings')
     .select(`
-      *,
+      id,
+      user_id,
+      event_id,
+      status,
+      created_at,
+      cancelled_at,
       event:events(
         id,
         title,
         date,
         start_time,
         park:parks(name)
-      ),
-      profile:profiles(nickname, phone)
+      )
     `)
     .order('created_at', { ascending: false })
     .limit(100)
 
-  if (error) {
-    console.error('Error fetching bookings:', error)
+  if (bookingsError) {
+    console.error('Error fetching bookings:', bookingsError)
     return []
   }
 
-  return (data as unknown as BookingWithRelations[]) || []
+  if (!bookingsData || bookingsData.length === 0) {
+    return []
+  }
+
+  // Get unique user IDs from bookings
+  const userIds = [...new Set(bookingsData.map(b => b.user_id))]
+
+  // Fetch profiles for these users
+  const { data: profilesData, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, nickname, phone')
+    .in('id', userIds)
+
+  if (profilesError) {
+    console.error('Error fetching profiles:', profilesError)
+  }
+
+  // Create a map of user_id -> profile
+  const profilesMap = new Map(
+    (profilesData || []).map(p => [p.id, { nickname: p.nickname, phone: p.phone }])
+  )
+
+  // Merge bookings with profiles
+  const bookings: BookingWithRelations[] = bookingsData.map(booking => ({
+    id: booking.id,
+    user_id: booking.user_id,
+    event_id: booking.event_id,
+    status: booking.status,
+    created_at: booking.created_at,
+    cancelled_at: booking.cancelled_at,
+    event: booking.event as unknown as BookingWithRelations['event'],
+    profile: profilesMap.get(booking.user_id) || null,
+  }))
+
+  return bookings
 }
 
 export default async function AdminBookingsPage() {
