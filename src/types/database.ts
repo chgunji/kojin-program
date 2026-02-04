@@ -17,6 +17,7 @@ export interface Database {
           gender: string | null
           age_group: string | null
           area: string | null
+          role: string
           created_at: string
           updated_at: string
         }
@@ -27,6 +28,7 @@ export interface Database {
           gender?: string | null
           age_group?: string | null
           area?: string | null
+          role?: string
           created_at?: string
           updated_at?: string
         }
@@ -37,6 +39,7 @@ export interface Database {
           gender?: string | null
           age_group?: string | null
           area?: string | null
+          role?: string
           created_at?: string
           updated_at?: string
         }
