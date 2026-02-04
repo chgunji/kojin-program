@@ -2,13 +2,16 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { Calendar, Users, CreditCard, TrendingUp } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: '管理ダッシュボード',
 }
+
+// Prevent static generation - this page requires runtime environment variables
+export const dynamic = 'force-dynamic'
 
 interface TodayEvent {
   id: string
@@ -26,7 +29,7 @@ interface DashboardStats {
 }
 
 async function getDashboardStats(): Promise<DashboardStats> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const today = new Date().toISOString().split('T')[0]
 
   // Today's events
@@ -84,7 +87,7 @@ interface RecentBooking {
 }
 
 async function getRecentBookings(): Promise<RecentBooking[]> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data } = await supabase
     .from('bookings')
