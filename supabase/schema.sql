@@ -15,6 +15,7 @@ CREATE TABLE profiles (
   gender TEXT CHECK (gender IN ('male', 'female', 'other', 'prefer_not_to_say')),
   age_group TEXT CHECK (age_group IN ('10s', '20s', '30s', '40s', '50s', '60s_plus')),
   area TEXT,
+  role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
@@ -29,11 +30,22 @@ CREATE POLICY "Users can view own profile"
 
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
-  USING (auth.uid() = id);
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id AND role = (SELECT role FROM profiles WHERE id = auth.uid()));
 
 CREATE POLICY "Users can insert own profile"
   ON profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
+
+-- Admin policies for profiles
+CREATE POLICY "Admins can view all profiles"
+  ON profiles FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles AS p
+      WHERE p.id = auth.uid() AND p.role = 'admin'
+    )
+  );
 
 -- ====================================
 -- 2. parks (施設・会場)
@@ -106,6 +118,16 @@ CREATE POLICY "Events are viewable by everyone"
   ON events FOR SELECT
   USING (true);
 
+-- Admin policies for events (管理者は作成・更新・削除可能)
+CREATE POLICY "Admins can manage events"
+  ON events FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+
 -- Create index for common queries
 CREATE INDEX idx_events_date ON events(date);
 CREATE INDEX idx_events_park_id ON events(park_id);
@@ -141,6 +163,16 @@ CREATE POLICY "Users can update own bookings"
   ON bookings FOR UPDATE
   USING (auth.uid() = user_id);
 
+-- Admin policies for bookings
+CREATE POLICY "Admins can view all bookings"
+  ON bookings FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+
 -- Create index
 CREATE INDEX idx_bookings_user_id ON bookings(user_id);
 CREATE INDEX idx_bookings_event_id ON bookings(event_id);
@@ -169,6 +201,16 @@ CREATE POLICY "Users can view payments for own bookings"
       SELECT 1 FROM bookings
       WHERE bookings.id = payments.booking_id
       AND bookings.user_id = auth.uid()
+    )
+  );
+
+-- Admin policies for payments
+CREATE POLICY "Admins can view all payments"
+  ON payments FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
     )
   );
 
