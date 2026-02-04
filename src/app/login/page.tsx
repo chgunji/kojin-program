@@ -194,8 +194,18 @@ function LoginPageContent() {
   const redirect = searchParams.get('redirect') || '/'
   const isAdminLogin = redirect.startsWith('/admin')
 
+  // Admin login: full-screen overlay to hide header/footer
+  if (isAdminLogin) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gray-950 flex items-center justify-center px-4">
+        <LoginForm />
+      </div>
+    )
+  }
+
+  // Regular login
   return (
-    <div className={`min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12 ${isAdminLogin ? 'bg-gray-950' : ''}`}>
+    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
       <LoginForm />
     </div>
   )
