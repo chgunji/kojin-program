@@ -38,6 +38,35 @@ export async function updateSession(request: NextRequest) {
 
   // Protect admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {
+    // --- Basic認証チェック ---
+    const basicAuth = request.headers.get('authorization')
+    const adminUser = process.env.ADMIN_BASIC_AUTH_USER
+    const adminPass = process.env.ADMIN_BASIC_AUTH_PASSWORD
+
+    if (adminUser && adminPass) {
+      if (!basicAuth) {
+        return new NextResponse('Authentication required', {
+          status: 401,
+          headers: {
+            'WWW-Authenticate': 'Basic realm="Admin Area"',
+          },
+        })
+      }
+
+      const authValue = basicAuth.split(' ')[1]
+      const [inputUser, inputPass] = atob(authValue).split(':')
+
+      if (inputUser !== adminUser || inputPass !== adminPass) {
+        return new NextResponse('Authentication required', {
+          status: 401,
+          headers: {
+            'WWW-Authenticate': 'Basic realm="Admin Area"',
+          },
+        })
+      }
+    }
+
+    // --- Supabaseログインチェック ---
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
