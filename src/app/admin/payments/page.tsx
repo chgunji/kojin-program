@@ -1,11 +1,14 @@
 import { format } from 'date-fns'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Badge } from '@/components/ui/Badge'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: '決済確認',
 }
+
+// Prevent static generation - this page requires runtime environment variables
+export const dynamic = 'force-dynamic'
 
 const statusLabels: Record<string, string> = {
   succeeded: '成功',
@@ -43,7 +46,7 @@ interface PaymentWithRelations {
 }
 
 async function getPayments(): Promise<PaymentWithRelations[]> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('payments')

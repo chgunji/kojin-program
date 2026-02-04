@@ -1,12 +1,15 @@
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Badge } from '@/components/ui/Badge'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: '申込者一覧',
 }
+
+// Prevent static generation - this page requires runtime environment variables
+export const dynamic = 'force-dynamic'
 
 interface BookingWithRelations {
   id: string
@@ -31,7 +34,7 @@ interface BookingWithRelations {
 }
 
 async function getBookings(): Promise<BookingWithRelations[]> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('bookings')
