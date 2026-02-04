@@ -77,6 +77,7 @@ async function getDashboardStats(): Promise<DashboardStats> {
 interface RecentBooking {
   id: string
   created_at: string
+  user_id: string
   event: {
     title: string
     date: string
@@ -89,19 +90,47 @@ interface RecentBooking {
 async function getRecentBookings(): Promise<RecentBooking[]> {
   const supabase = createAdminClient()
 
-  const { data } = await supabase
+  // First, fetch recent bookings with events
+  const { data: bookingsData, error: bookingsError } = await supabase
     .from('bookings')
     .select(`
       id,
       created_at,
-      event:events(title, date),
-      profile:profiles(nickname)
+      user_id,
+      event:events(title, date)
     `)
     .eq('status', 'confirmed')
     .order('created_at', { ascending: false })
     .limit(5)
 
-  return (data as unknown as RecentBooking[]) || []
+  if (bookingsError || !bookingsData || bookingsData.length === 0) {
+    return []
+  }
+
+  // Get unique user IDs from bookings
+  const userIds = [...new Set(bookingsData.map(b => b.user_id))]
+
+  // Fetch profiles for these users
+  const { data: profilesData } = await supabase
+    .from('profiles')
+    .select('id, nickname')
+    .in('id', userIds)
+
+  // Create a map of user_id -> profile
+  const profilesMap = new Map(
+    (profilesData || []).map(p => [p.id, { nickname: p.nickname }])
+  )
+
+  // Merge bookings with profiles
+  const bookings: RecentBooking[] = bookingsData.map(booking => ({
+    id: booking.id,
+    created_at: booking.created_at,
+    user_id: booking.user_id,
+    event: booking.event as unknown as RecentBooking['event'],
+    profile: profilesMap.get(booking.user_id) || null,
+  }))
+
+  return bookings
 }
 
 export default async function AdminDashboard() {
