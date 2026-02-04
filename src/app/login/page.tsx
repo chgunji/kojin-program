@@ -194,10 +194,10 @@ function LoginPageContent() {
   const redirect = searchParams.get('redirect') || '/'
   const isAdminLogin = redirect.startsWith('/admin')
 
-  // Admin login: full-screen overlay to hide header/footer
+  // Admin login: full-screen dark background (header/footer hidden by LayoutWrapper)
   if (isAdminLogin) {
     return (
-      <div className="fixed inset-0 z-50 bg-gray-950 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
         <LoginForm />
       </div>
     )
