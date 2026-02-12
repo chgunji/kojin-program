@@ -36,8 +36,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  // Protect admin routes (except /admin/login)
+  if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
     // --- Basic認証チェック ---
     const basicAuth = request.headers.get('authorization')
     const adminUser = process.env.ADMIN_BASIC_AUTH_USER
@@ -69,8 +69,7 @@ export async function updateSession(request: NextRequest) {
     // --- Supabaseログインチェック ---
     if (!user) {
       const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.set('redirect', request.nextUrl.pathname)
+      url.pathname = '/admin/login'
       return NextResponse.redirect(url)
     }
 
