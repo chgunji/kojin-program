@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { SearchForm } from '@/components/search/SearchForm'
 import { EventCard } from '@/components/events/EventCard'
@@ -139,12 +140,12 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold">近日開催のプログラム</h2>
-            <a
+            <Link
               href="/programs"
               className="text-green-600 hover:text-green-700 font-medium"
             >
               すべて見る
-            </a>
+            </Link>
           </div>
 
           {events.length > 0 ? (
