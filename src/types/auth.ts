@@ -22,6 +22,7 @@ export interface AuthContextType {
   user: User | null
   profile: UserProfile | null
   isLoading: boolean
+  isAdmin: boolean
   login: (email: string, password: string) => Promise<{ error: string | null }>
   register: (email: string, password: string) => Promise<{ error: string | null }>
   logout: () => Promise<void>
