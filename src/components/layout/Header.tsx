@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Menu, X, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 export function Header() {
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const supabase = createClient()
@@ -27,7 +29,9 @@ export function Header() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    window.location.href = '/'
+    setUser(null)
+    router.push('/')
+    router.refresh()
   }
 
   return (
