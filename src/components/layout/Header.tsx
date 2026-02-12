@@ -2,34 +2,17 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import { Menu, X, User } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
+import { useState } from 'react'
+import { Menu, X, User, Settings } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 
 export function Header() {
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [user, setUser] = useState<SupabaseUser | null>(null)
-  const supabase = createClient()
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  const { user, isAdmin, logout } = useAuth()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
+    await logout()
     router.push('/')
     router.refresh()
   }
@@ -53,6 +36,15 @@ export function Header() {
                 <Link href="/mypage" className="text-gray-600 hover:text-green-600 transition-colors">
                   マイページ
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-1 text-orange-500 hover:text-orange-600 font-medium transition-colors"
+                  >
+                    <Settings size={16} />
+                    管理画面へ
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="text-gray-600 hover:text-green-600 transition-colors"
@@ -111,6 +103,16 @@ export function Header() {
                   >
                     マイページ
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-1 text-orange-500 hover:text-orange-600 font-medium transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Settings size={16} />
+                      管理画面へ
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       handleSignOut()

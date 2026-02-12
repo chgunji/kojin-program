@@ -83,7 +83,7 @@ export async function updateSession(request: NextRequest) {
 
     if (!profile || profile.role !== 'admin') {
       const url = request.nextUrl.clone()
-      url.pathname = '/'
+      url.pathname = '/programs'
       return NextResponse.redirect(url)
     }
   }
