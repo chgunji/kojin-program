@@ -116,9 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setProfile(null)
+    try {
+      // クライアントサイドのサインアウト
+      await supabase.auth.signOut()
+      // サーバーサイドの Cookie もクリア
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      setUser(null)
+      setProfile(null)
+    }
   }
 
   const updateProfile = async (data: Partial<UserProfile>) => {
