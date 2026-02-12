@@ -60,7 +60,7 @@ export function SearchFilters({ categories, parks, currentFilters }: SearchFilte
             id="filter-date"
             value={currentFilters.date || ''}
             onChange={(e) => updateFilter('date', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900"
             min={new Date().toISOString().split('T')[0]}
           />
         </div>
@@ -74,7 +74,7 @@ export function SearchFilters({ categories, parks, currentFilters }: SearchFilte
             id="filter-park"
             value={currentFilters.park || ''}
             onChange={(e) => updateFilter('park', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900"
           >
             <option value="">すべて</option>
             {parks.map((park) => (
@@ -94,7 +94,7 @@ export function SearchFilters({ categories, parks, currentFilters }: SearchFilte
             id="filter-category"
             value={currentFilters.category || ''}
             onChange={(e) => updateFilter('category', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900"
           >
             <option value="">すべて</option>
             {categories.map((category) => (
@@ -114,7 +114,7 @@ export function SearchFilters({ categories, parks, currentFilters }: SearchFilte
             id="filter-level"
             value={currentFilters.level || ''}
             onChange={(e) => updateFilter('level', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-900"
           >
             <option value="">すべて</option>
             {Object.entries(levelLabels).map(([value, label]) => (
